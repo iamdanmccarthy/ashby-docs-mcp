@@ -1,9 +1,11 @@
 const fs = require("fs");
 const path = require("path");
 
-const DOCS = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "docs.json"), "utf8")
-);
+const DOCS_PATH = fs.existsSync(path.join(__dirname, "docs.json"))
+  ? path.join(__dirname, "docs.json")
+  : path.join("/var/task/netlify/functions", "docs.json");
+
+const DOCS = JSON.parse(fs.readFileSync(DOCS_PATH, "utf8"));
 
 const TOOLS = [
   {

@@ -1,6 +1,9 @@
 [build]
   functions = "netlify/functions"
 
+[functions."mcp"]
+  included_files = ["netlify/functions/docs.json"]
+
 [[redirects]]
   from = "/mcp"
   to = "/.netlify/functions/mcp"
