@@ -8,3 +8,8 @@
   from = "/mcp"
   to = "/.netlify/functions/mcp"
   status = 200
+
+[[redirects]]
+  from = "/"
+  to = "/install.html"
+  status = 200
