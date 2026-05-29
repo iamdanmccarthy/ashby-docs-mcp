@@ -4,12 +4,15 @@
   <meta charset="UTF-8">
   <title>Ashby Docs MCP — Install Instructions</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 700px; margin: 60px auto; padding: 0 24px; color: #1a1a1a; }
-    h1 { font-size: 24px; margin-bottom: 4px; }
-    .subtitle { color: #666; margin-bottom: 40px; }
-    h2 { font-size: 16px; font-weight: 600; margin-top: 36px; margin-bottom: 8px; }
-    p { color: #444; font-size: 14px; margin-bottom: 8px; }
-    pre { background: #f4f4f4; border-radius: 8px; padding: 16px; font-size: 13px; position: relative; overflow-x: auto; }
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 720px; margin: 60px auto; padding: 0 24px; color: #1a1a1a; }
+    h1 { font-size: 26px; margin-bottom: 6px; }
+    .subtitle { color: #555; margin-bottom: 12px; font-size: 15px; }
+    .intro { background: #f9f9f9; border-left: 3px solid #ccc; padding: 14px 18px; border-radius: 6px; font-size: 14px; color: #444; margin-bottom: 36px; line-height: 1.6; }
+    h2 { font-size: 17px; font-weight: 600; margin-top: 40px; margin-bottom: 4px; }
+    .section-desc { font-size: 14px; color: #444; margin-bottom: 6px; line-height: 1.6; }
+    .steps { font-size: 14px; color: #444; margin: 0 0 10px 0; padding-left: 20px; line-height: 1.8; }
+    .steps li { margin-bottom: 2px; }
+    pre { background: #f4f4f4; border-radius: 8px; padding: 16px; font-size: 13px; position: relative; overflow-x: auto; margin-top: 8px; }
     code { font-family: "SF Mono", Monaco, monospace; }
     .copy-btn {
       position: absolute; top: 10px; right: 10px;
@@ -19,33 +22,73 @@
     .copy-btn:hover { background: #eee; }
     .copy-btn.copied { color: green; border-color: green; }
     .path { font-size: 12px; color: #888; margin-bottom: 4px; font-family: "SF Mono", Monaco, monospace; }
+    .note { font-size: 13px; color: #888; margin-top: 8px; font-style: italic; }
+    hr { border: none; border-top: 1px solid #eee; margin: 48px 0 0; }
+    .footer { font-size: 13px; color: #aaa; margin-top: 16px; padding-bottom: 60px; }
   </style>
 </head>
 <body>
 
   <h1>Ashby Docs MCP</h1>
-  <p class="subtitle">Add to your AI assistant to search all 215 Ashby help articles.</p>
+  <p class="subtitle">Give your AI assistant instant access to all 215 Ashby help articles.</p>
 
+  <div class="intro">
+    <strong>What this does:</strong> This adds a tool to your AI assistant (Claude or Cursor) that lets it search and read Ashby's help documentation directly. Instead of guessing or sending you to Google, your AI can look up the actual answer from Ashby's knowledge base — things like how approvals work, how to configure automations, how to set up job postings, and more.<br><br>
+    <strong>How to install:</strong> Find your AI tool below, follow the steps to open the right config file, paste in the code snippet, save, and restart. That's it.
+  </div>
+
+  <!-- CLAUDE CODE -->
   <h2>Claude Code (terminal)</h2>
+  <p class="section-desc">If you use Claude Code in your terminal (the <code>claude</code> command), follow these steps:</p>
+  <ol class="steps">
+    <li>Open your terminal and run: <code>open ~/.claude.json</code></li>
+    <li>Find the section that says <code>"mcpServers"</code></li>
+    <li>Paste the code below inside that section (after the opening <code>{</code>, before the closing <code>}</code>)</li>
+    <li>Make sure there's a comma separating it from any other entries</li>
+    <li>Save the file, then start a new Claude session</li>
+  </ol>
   <p class="path">~/.claude.json → under "mcpServers"</p>
   <pre><code id="cc">"ashby-docs": {
   "type": "http",
   "url": "https://ashby-docs-mcp.netlify.app/mcp"
 }</code><button class="copy-btn" onclick="copy('cc', this)">Copy</button></pre>
+  <p class="note">Not sure where to paste it? Ask Claude to add it for you — just say "add this to my mcpServers in ~/.claude.json" and paste the snippet.</p>
 
+  <!-- CLAUDE DESKTOP -->
   <h2>Claude Desktop</h2>
+  <p class="section-desc">If you use the Claude desktop app on Mac, follow these steps:</p>
+  <ol class="steps">
+    <li>Open Finder, press <strong>Cmd + Shift + G</strong>, and paste this path: <code>~/Library/Application Support/Claude/</code></li>
+    <li>Open the file called <code>claude_desktop_config.json</code> in a text editor</li>
+    <li>Find the section that says <code>"mcpServers"</code></li>
+    <li>Paste the code below inside that section</li>
+    <li>Make sure there's a comma separating it from any other entries</li>
+    <li>Save the file, then fully quit and reopen Claude Desktop</li>
+  </ol>
   <p class="path">~/Library/Application Support/Claude/claude_desktop_config.json → under "mcpServers"</p>
   <pre><code id="cd">"ashby-docs": {
   "type": "http",
   "url": "https://ashby-docs-mcp.netlify.app/mcp"
 }</code><button class="copy-btn" onclick="copy('cd', this)">Copy</button></pre>
 
+  <!-- CURSOR -->
   <h2>Cursor</h2>
+  <p class="section-desc">If you use Cursor, the easiest way is through the settings UI:</p>
+  <ol class="steps">
+    <li>Open Cursor and go to <strong>Settings → Cursor Settings → MCP</strong></li>
+    <li>Click <strong>Add new MCP server</strong></li>
+    <li>Set the type to <strong>http</strong> and paste the URL: <code>https://ashby-docs-mcp.netlify.app/mcp</code></li>
+    <li>Save and restart Cursor</li>
+  </ol>
+  <p class="section-desc">Or if you prefer to edit the config file directly:</p>
   <p class="path">~/.cursor/mcp.json → under "mcpServers"</p>
   <pre><code id="cursor">"ashby-docs": {
   "type": "http",
   "url": "https://ashby-docs-mcp.netlify.app/mcp"
 }</code><button class="copy-btn" onclick="copy('cursor', this)">Copy</button></pre>
+
+  <hr>
+  <p class="footer">Built by Dan McCarthy · Ashby docs scraped from <a href="https://docs.ashbyhq.com" target="_blank">docs.ashbyhq.com</a> · <a href="https://github.com/iamdanmccarthy/ashby-docs-mcp" target="_blank">View on GitHub</a></p>
 
   <script>
     function copy(id, btn) {
