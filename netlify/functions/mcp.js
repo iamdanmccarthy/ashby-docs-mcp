@@ -14,6 +14,8 @@ const MAX_TERMS = 10;
 const MAX_SLUG_LEN = 200;
 const MAX_BODY_BYTES = 10000;
 const MAX_BATCH = 10;
+const LIST_PAGE = 100;
+const LIST_PAGE_MAX = 200;
 
 const TOOLS = [
   {
@@ -41,8 +43,14 @@ const TOOLS = [
   },
   {
     name: "list_ashby_docs",
-    description: "List all available Ashby help articles.",
-    inputSchema: { type: "object", properties: {} }
+    description: "List Ashby help article slugs, one page at a time. To find an article by topic, use search_ashby_docs instead.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        offset: { type: "integer", description: "Start position (default 0)" },
+        limit: { type: "integer", description: "Slugs per page (default 100, max 200)" }
+      }
+    }
   }
 ];
 
@@ -73,6 +81,17 @@ function searchDocs(query, maxResults = 5) {
     .join("\n\n---\n\n");
 }
 
+function listDocs(offset, limit) {
+  const slugs = Object.keys(DOCS).sort();
+  offset = Math.max(parseInt(offset, 10) || 0, 0);
+  limit = Math.min(Math.max(parseInt(limit, 10) || LIST_PAGE, 1), LIST_PAGE_MAX);
+  const page = slugs.slice(offset, offset + limit);
+  if (!page.length) return `No articles at offset ${offset}. There are ${slugs.length} in total.`;
+  const end = offset + page.length;
+  const more = end < slugs.length ? ` Use offset=${end} for the next page.` : "";
+  return `Showing ${offset + 1}-${end} of ${slugs.length}.${more} To find an article by topic, use search_ashby_docs.\n\n` + page.join("\n");
+}
+
 function getDoc(slug) {
   if (typeof slug !== "string" || !slug.trim()) return "Provide a slug.";
   if (slug.length > MAX_SLUG_LEN) return `Slug too long (max ${MAX_SLUG_LEN} characters).`;
@@ -83,8 +102,19 @@ function getDoc(slug) {
   return `No doc found for: ${slug}`;
 }
 
-function handle(request) {
+function handle(request, ua) {
   const { method, id, params } = request;
+  // One line per call so a day of logs shows who is calling and how. No query text, no IPs.
+  const args = (params && params.arguments) || {};
+  console.log(JSON.stringify({
+    method,
+    tool: params && params.name,
+    ua: ua || null,
+    query_len: typeof args.query === "string" ? args.query.length : undefined,
+    max_results: args.max_results,
+    offset: args.offset,
+    limit: args.limit
+  }));
 
   if (method === "initialize") {
     return {
@@ -108,7 +138,7 @@ function handle(request) {
     let text;
     if (name === "search_ashby_docs") text = searchDocs(args.query, args.max_results || 5);
     else if (name === "get_ashby_doc") text = getDoc(args.slug);
-    else if (name === "list_ashby_docs") text = Object.keys(DOCS).sort().join("\n");
+    else if (name === "list_ashby_docs") text = listDocs(args.offset, args.limit);
     else text = `Unknown tool: ${name}`;
     return { jsonrpc: "2.0", id, result: { content: [{ type: "text", text }] } };
   }
@@ -132,16 +162,18 @@ exports.handler = async (event) => {
     return { statusCode: 413, headers: CORS, body: JSON.stringify({ error: "Request too large" }) };
   }
 
+  const ua = String((event.headers && event.headers["user-agent"]) || "").slice(0, 120);
+
   try {
     const request = JSON.parse(event.body || "{}");
     if (Array.isArray(request)) {
       if (request.length > MAX_BATCH) {
         return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: `Batch too large (max ${MAX_BATCH})` }) };
       }
-      const responses = request.map(handle).filter(Boolean);
+      const responses = request.map(r => handle(r, ua)).filter(Boolean);
       return { statusCode: 200, headers: CORS, body: JSON.stringify(responses) };
     }
-    const result = handle(request);
+    const result = handle(request, ua);
     if (!result) return { statusCode: 202, headers: CORS, body: "" };
     return { statusCode: 200, headers: CORS, body: JSON.stringify(result) };
   } catch (e) {
