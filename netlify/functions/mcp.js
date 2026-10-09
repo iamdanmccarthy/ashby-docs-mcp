@@ -7,6 +7,14 @@ const DOCS_PATH = fs.existsSync(path.join(__dirname, "docs.json"))
 
 const DOCS = JSON.parse(fs.readFileSync(DOCS_PATH, "utf8"));
 
+// Input limits. The corpus is public, so the risk is quota burn, not data exposure.
+const MAX_RESULTS = 10;
+const MAX_QUERY_LEN = 200;
+const MAX_TERMS = 10;
+const MAX_SLUG_LEN = 200;
+const MAX_BODY_BYTES = 10000;
+const MAX_BATCH = 10;
+
 const TOOLS = [
   {
     name: "search_ashby_docs",
@@ -39,7 +47,10 @@ const TOOLS = [
 ];
 
 function searchDocs(query, maxResults = 5) {
-  const terms = query.toLowerCase().split(/\s+/);
+  if (typeof query !== "string" || !query.trim()) return "Provide a non-empty query string.";
+  if (query.length > MAX_QUERY_LEN) return `Query too long (max ${MAX_QUERY_LEN} characters).`;
+  maxResults = Math.min(Math.max(parseInt(maxResults, 10) || 5, 1), MAX_RESULTS);
+  const terms = query.toLowerCase().split(/\s+/).filter(Boolean).slice(0, MAX_TERMS);
   const results = [];
 
   for (const [slug, content] of Object.entries(DOCS)) {
@@ -63,7 +74,9 @@ function searchDocs(query, maxResults = 5) {
 }
 
 function getDoc(slug) {
-  if (DOCS[slug]) return DOCS[slug];
+  if (typeof slug !== "string" || !slug.trim()) return "Provide a slug.";
+  if (slug.length > MAX_SLUG_LEN) return `Slug too long (max ${MAX_SLUG_LEN} characters).`;
+  if (Object.prototype.hasOwnProperty.call(DOCS, slug)) return DOCS[slug];
   const matches = Object.keys(DOCS).filter(s => s.includes(slug));
   if (matches.length === 1) return DOCS[matches[0]];
   if (matches.length > 1) return `Multiple matches: ${matches.join(", ")}`;
@@ -115,9 +128,16 @@ exports.handler = async (event) => {
     return { statusCode: 200, headers: CORS, body: "" };
   }
 
+  if (Buffer.byteLength(event.body || "", "utf8") > MAX_BODY_BYTES) {
+    return { statusCode: 413, headers: CORS, body: JSON.stringify({ error: "Request too large" }) };
+  }
+
   try {
     const request = JSON.parse(event.body || "{}");
     if (Array.isArray(request)) {
+      if (request.length > MAX_BATCH) {
+        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: `Batch too large (max ${MAX_BATCH})` }) };
+      }
       const responses = request.map(handle).filter(Boolean);
       return { statusCode: 200, headers: CORS, body: JSON.stringify(responses) };
     }

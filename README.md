@@ -1,6 +1,6 @@
 # Ashby Docs MCP
 
-A Model Context Protocol (MCP) server that makes all 215 Ashby help articles searchable by AI assistants.
+A Model Context Protocol (MCP) server that makes all 483 Ashby help articles searchable by AI assistants.
 
 ## Add to Claude Code
 
@@ -25,3 +25,7 @@ python3 build_docs.py         # rebuild docs.json
 git add netlify/functions/docs.json && git commit -m "refresh docs"
 git push
 ```
+
+## Content and license
+
+The code is MIT licensed. The help articles in `docs.json` are © Ashby and are included for search. Each result links back to the source.
